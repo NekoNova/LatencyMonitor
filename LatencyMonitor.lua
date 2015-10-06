@@ -1,7 +1,7 @@
 require "Window"
 require "GameLib"
 
-local LatencyMonitorEx = {} 
+local LatencyMonitor = {}
 local pairs, unpack = pairs, unpack
 local VILib, GeminiColor
 local tVersion = {
@@ -106,30 +106,30 @@ local tLatencyDisclaimer = {
 }
 
 
-function LatencyMonitorEx:new(o)
+function LatencyMonitor:new(o)
   o = o or {} 
   setmetatable(o, self)
   self.__index = self 
   return o
 end
 
-function LatencyMonitorEx:Init()
+function LatencyMonitor:Init()
   Apollo.RegisterAddon(self, true, "Latency Monitor", {"Viper:Lib:VILib-1.9", "GeminiColor"})
 end
 
-function LatencyMonitorEx:OnConfigure()
+function LatencyMonitor:OnConfigure()
 	self:ShowHideOptions()
 end
 
-function LatencyMonitorEx:OnLoad()
+function LatencyMonitor:OnLoad()
 	VILib = Apollo.GetPackage("Viper:Lib:VILib-1.9").tPackage
 	GeminiColor = Apollo.GetPackage("GeminiColor").tPackage
 	self.settings = VILib:CopyTable(tDefaultSettings)
-	self.xmlDoc = XmlDoc.CreateFromFile("LatencyMonitorEx.xml")
+	self.xmlDoc = XmlDoc.CreateFromFile("LatencyMonitor.xml")
 	self.xmlDoc:RegisterCallback("OnDocLoaded", self)
 end
 
-function LatencyMonitorEx:OnDocLoaded()
+function LatencyMonitor:OnDocLoaded()
 	if self.xmlDoc ~= nil and self.xmlDoc:IsLoaded() then
     self.wndMain = Apollo.LoadForm(self.xmlDoc, "MainForm", "", self)
 		
@@ -164,13 +164,13 @@ function LatencyMonitorEx:OnDocLoaded()
 	end
 end
 
-function LatencyMonitorEx:OnSave(eLevel)
+function LatencyMonitor:OnSave(eLevel)
 	if eLevel ~= GameLib.CodeEnumAddonSaveLevel.Account then return nil end
 	self.settings.tVersion = VILib:CopyTable(tVersion)
 	return self.settings
 end
 
-function LatencyMonitorEx:OnRestore(eLevel, tData)
+function LatencyMonitor:OnRestore(eLevel, tData)
 	if tData then
 		self.settings = VILib:MergeTables(self.settings, tData)
 		if self.wndMain then self:SetSettings() end
@@ -179,13 +179,13 @@ function LatencyMonitorEx:OnRestore(eLevel, tData)
 	end
 end
 
-function LatencyMonitorEx:OnInterfaceMenuListHasLoaded()
+function LatencyMonitor:OnInterfaceMenuListHasLoaded()
 	if self.InterfaceMenuRegistered then return end
 	self.InterfaceMenuRegistered = true
 	Event_FireGenericEvent("InterfaceMenuList_NewAddOn", "Latency Monitor", {"VLM_ToggleOptions", "", ""})
 end
 
-function LatencyMonitorEx:OnUpdateLatency()
+function LatencyMonitor:OnUpdateLatency()
 	local nLatency = GameLib.GetLatency()
 	local nNetwork = GameLib.GetPingTime()
 	local colorS = self.settings.sTextColor
@@ -213,7 +213,7 @@ function LatencyMonitorEx:OnUpdateLatency()
 	self.wndMain:FindChild("Text"):SetAML(string.format(self.strOutput, colorS, nLatency, colorN, nNetwork))
 end
 
-function LatencyMonitorEx:GetLatencyColor(nLatency)
+function LatencyMonitor:GetLatencyColor(nLatency)
 	local nThreshold = self:GetThreshold(nLatency)
 	local color = {r = self.settings.tThresholds[nThreshold][2][1], g = self.settings.tThresholds[nThreshold][2][2], b = self.settings.tThresholds[nThreshold][2][3]}
 	if self.settings.bTransitionColor then
@@ -229,7 +229,7 @@ function LatencyMonitorEx:GetLatencyColor(nLatency)
 	return VILib:ConvertARGBColorToHex(color)
 end
 
-function LatencyMonitorEx:GetThreshold(nLatency)
+function LatencyMonitor:GetThreshold(nLatency)
 	local nThreshold = 3
 	local nGraphicThreshold = 4
 	for i, v in ipairs(self.settings.tThresholds) do
@@ -242,7 +242,7 @@ function LatencyMonitorEx:GetThreshold(nLatency)
 	return nThreshold, nGraphicThreshold
 end
 
-function LatencyMonitorEx:SetSettings()
+function LatencyMonitor:SetSettings()
 	self:SetGraphic()
 	local nSize = 0
 	if self.settings.bShowOrb then
@@ -280,12 +280,12 @@ function LatencyMonitorEx:SetSettings()
 	self:OnUpdateLatency()
 end
 
-function LatencyMonitorEx:SetPosition()
+function LatencyMonitor:SetPosition()
 	self.wndMain:SetAnchorPoints(unpack(VILib.tAnchors[self.settings.nMainAnchorID].tPoints))
 	self.wndMain:SetAnchorOffsets(self:GetOffsets())
 end
 
-function LatencyMonitorEx:GetOffsets()
+function LatencyMonitor:GetOffsets()
 	local nOL, nOT, nOR, nOB = unpack(self.settings.tWindowOffsets[self.settings.nMainAnchorID])
 	if nOL == 0 and nOR == 0 then
 		local nOLM, nORM = VILib.tAnchors[self.settings.nMainAnchorID].tOffsetMults[1], VILib.tAnchors[self.settings.nMainAnchorID].tOffsetMults[3]
@@ -298,7 +298,7 @@ function LatencyMonitorEx:GetOffsets()
 	return nOL, nOT, nOR, nOB
 end
 
-function LatencyMonitorEx:SetGraphic(nLatency)
+function LatencyMonitor:SetGraphic(nLatency)
 	local nLatency = nLatency or 100
 	local strTmpThreshold = tostring(5 - self:GetThreshold(nLatency))
 	local nID = self.settings.nGraphicID
@@ -313,7 +313,7 @@ function LatencyMonitorEx:SetGraphic(nLatency)
 	end
 end
 
-function LatencyMonitorEx:OnSlashCommand(strCmd, strParam)
+function LatencyMonitor:OnSlashCommand(strCmd, strParam)
 	if strParam ~= "" then
 		local tParams = {}
 		for w in string.gmatch(strParam, "%S*") do
@@ -339,7 +339,7 @@ end
 -- OptionsList Functions
 ---------------------------------------------------------------------------------------------------
 
-function LatencyMonitorEx:SetOptions()
+function LatencyMonitor:SetOptions()
 	local nScreenWidth, nScreenHeight = Apollo.GetScreenSize()
 	self.wndOptionsList:FindChild("PositionContainer:PosOffsetLeft:Slider"):SetMinMax(-nScreenWidth, nScreenWidth)
 	self.wndOptionsList:FindChild("PositionContainer:PosOffsetTop:Slider"):SetMinMax(-nScreenHeight, nScreenHeight)
@@ -385,7 +385,7 @@ function LatencyMonitorEx:SetOptions()
 	self.wndOptionsList:FindChild("DisclaimerContent"):SetVScrollPos(0)
 end
 
-function LatencyMonitorEx:ShowHideOptions()
+function LatencyMonitor:ShowHideOptions()
 	self.bOptionsOpen = not self.bOptionsOpen
 	if not self.wndOptions then
 		if not self.xmlDocOptions then self.xmlDocOptions = XmlDoc.CreateFromFile("Options.xml") end
@@ -410,18 +410,18 @@ function LatencyMonitorEx:ShowHideOptions()
 	self.wndMain:SetStyle("IgnoreMouse", not self.bOptionsOpen)
 end
 
-function LatencyMonitorEx:OnOptionsWindowMove(wndHandler, wndControl, nOldLeft, nOldTop, nOldRight, nOldBottom)
+function LatencyMonitor:OnOptionsWindowMove(wndHandler, wndControl, nOldLeft, nOldTop, nOldRight, nOldBottom)
 	local nScreenWidth, nScreenHeight = Apollo.GetScreenSize()
 	local nPosLeft, nPosTop = self.wndOptions:GetPos()
 	self.settings.tOptionsWindowPos[1], self.settings.tOptionsWindowPos[2] = nPosLeft / nScreenWidth, nPosTop / nScreenHeight
 end
 
-function LatencyMonitorEx:OnOptionsWindowClosed(wndHandler, wndControl)
+function LatencyMonitor:OnOptionsWindowClosed(wndHandler, wndControl)
 	if wndHandler ~= wndControl then return end
 	self:ShowHideOptions()
 end
 
-function LatencyMonitorEx:OnOptionsWindowHide(wndHandler, wndControl)
+function LatencyMonitor:OnOptionsWindowHide(wndHandler, wndControl)
 	if wndHandler ~= wndControl then return end
 	if self.wndOptions then
 		self.wndOptionsList:Destroy()
@@ -432,25 +432,25 @@ function LatencyMonitorEx:OnOptionsWindowHide(wndHandler, wndControl)
 end
 
 
-function LatencyMonitorEx:OnPosOffsetLeftSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnPosOffsetLeftSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.tWindowOffsets[self.settings.nMainAnchorID][1] = fNewValue
 	self.settings.tWindowOffsets[self.settings.nMainAnchorID][3] = fNewValue + arSize[1]
 	wndControl:GetParent():FindChild("Output"):SetText(fNewValue)
 	self:SetPosition()
 end
 
-function LatencyMonitorEx:OnPosOffsetTopSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnPosOffsetTopSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.tWindowOffsets[self.settings.nMainAnchorID][2] = fNewValue
 	self.settings.tWindowOffsets[self.settings.nMainAnchorID][4] = fNewValue + arSize[2]
 	wndControl:GetParent():FindChild("Output"):SetText(fNewValue)
 	self:SetPosition()
 end
 
-function LatencyMonitorEx:OnMainAnchorButtonCheck(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnMainAnchorButtonCheck(wndHandler, wndControl, eMouseButton)
 	self.wndOptionsList:FindChild("AnchorParent"):Show(not self.bMainAnchorShown, true)
 end
 
-function LatencyMonitorEx:FillAnchorList()
+function LatencyMonitor:FillAnchorList()
 	local nSel = 0
 	self.wndOptionsList:FindChild("AnchorParent:AnchorGrid"):DeleteAll()
 	for i, v in ipairs(VILib.tAnchors) do
@@ -463,7 +463,7 @@ function LatencyMonitorEx:FillAnchorList()
 	self.wndOptionsList:FindChild("AnchorParent:AnchorGrid"):SetCurrentRow(nSel)
 end
 
-function LatencyMonitorEx:OnMainAnchorGridSelChange(wndHandler, wndControl, nRow)
+function LatencyMonitor:OnMainAnchorGridSelChange(wndHandler, wndControl, nRow)
 	local tData = wndControl:GetCellData(nRow, 1)
 	if not tData then return end
 	self.settings.nMainAnchorID = nRow
@@ -477,10 +477,10 @@ function LatencyMonitorEx:OnMainAnchorGridSelChange(wndHandler, wndControl, nRow
 	self:SetPosition()
 end
 
-function LatencyMonitorEx:OnMouseDownCatcher(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
+function LatencyMonitor:OnMouseDownCatcher(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY, bDoubleClick, bStopPropagation)
 end
 
-function LatencyMonitorEx:OnMainAnchorShow(wndHandler, wndControl)
+function LatencyMonitor:OnMainAnchorShow(wndHandler, wndControl)
 	if wndHandler ~= wndControl then return end
 	self:FillAnchorList()
 	self.bMainAnchorShown = true
@@ -489,7 +489,7 @@ function LatencyMonitorEx:OnMainAnchorShow(wndHandler, wndControl)
 	self.wndOptionsList:SetStyle("Escapable", false)
 end
 
-function LatencyMonitorEx:OnMainAnchorClosed(wndHandler, wndControl)
+function LatencyMonitor:OnMainAnchorClosed(wndHandler, wndControl)
 	if wndHandler ~= wndControl then return end
 	self.bMainAnchorShown = false
 	self.wndOptionsList:FindChild("PositionContainer:Anchor:DropdownBtnBG"):SetCheck(false)
@@ -497,77 +497,77 @@ function LatencyMonitorEx:OnMainAnchorClosed(wndHandler, wndControl)
 	self.EscapeTimer = ApolloTimer.Create(0.1, false, "OnMainEscapableTimer", self)
 end
 
-function LatencyMonitorEx:OnMainAnchorButtonEnter(wndHandler, wndControl, x, y)
+function LatencyMonitor:OnMainAnchorButtonEnter(wndHandler, wndControl, x, y)
 	self.wndOptionsList:FindChild("AnchorParent"):SetStyle("CloseOnExternalClick", false)
 end
 
-function LatencyMonitorEx:OnMainAnchorButtonExit(wndHandler, wndControl, x, y)
+function LatencyMonitor:OnMainAnchorButtonExit(wndHandler, wndControl, x, y)
 	self.wndOptionsList:FindChild("AnchorParent"):SetStyle("CloseOnExternalClick", true)
 end
 
-function LatencyMonitorEx:OnMainEscapableTimer()
+function LatencyMonitor:OnMainEscapableTimer()
 	self.wndOptionsList:SetStyle("Escapable", true)
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnShowOrbButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnShowOrbButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bShowOrb = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnShowTextButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnShowTextButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bShowText = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnShowMsButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnShowMsButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bShowMs = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnShowNetworkLatencyButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnShowNetworkLatencyButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bShowNetworkLatency = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnColorOrbButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnColorOrbButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bColorOrb = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnColorFromNetworkLatencyButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnColorFromNetworkLatencyButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bColorFromNetworkLatency = wndControl:IsChecked()
 	self:OnUpdateLatency()
 end
 
-function LatencyMonitorEx:OnColorTextUseButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnColorTextUseButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bColorText = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnColorTransitionsUseButtonUp(wndHandler, wndControl, eMouseButton)
+function LatencyMonitor:OnColorTransitionsUseButtonUp(wndHandler, wndControl, eMouseButton)
 	self.settings.bTransitionColor = wndControl:IsChecked()
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnTextColorMouseUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
+function LatencyMonitor:OnTextColorMouseUp(wndHandler, wndControl, eMouseButton, nLastRelativeMouseX, nLastRelativeMouseY)
 	if wndHandler ~= wndControl then return end
 	GeminiColor:ShowColorPicker(self, "UpdateTextColor", true, self.settings.sTextColor)
 end
 
-function LatencyMonitorEx:UpdateTextColor(strColor)
+function LatencyMonitor:UpdateTextColor(strColor)
 	self.settings.sTextColor = strColor
 	if self.wndOptionsList then self.wndOptionsList:FindChild("TextColor"):FindChild("ColorSwatch"):SetBGColor(self.settings.sTextColor) end
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnUpdateFrequencySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnUpdateFrequencySliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.fUpdateFrequency = fNewValue
 	wndControl:GetParent():FindChild("Output"):SetText(VILib:Round(fNewValue, 1, true) .. " sec")
 	self.timerUpdater:Set(self.settings.fUpdateFrequency, true, "OnUpdateLatency")
 end
 
-function LatencyMonitorEx:OnFontTypeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnFontTypeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.nFontType = fNewValue
 	wndControl:GetParent():FindChild("Output"):SetText(arFontTypes[fNewValue])
 	self.wndOptionsList:FindChild("FontOptionContainer:FontSize:Slider"):SetMinMax(1, #arFontSizes[fNewValue])
@@ -579,19 +579,19 @@ function LatencyMonitorEx:OnFontTypeSliderChanged(wndHandler, wndControl, fNewVa
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnFontSizeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnFontSizeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.nFontSize = fNewValue
 	wndControl:GetParent():FindChild("Output"):SetText(arFontSizes[self.settings.nFontType][fNewValue])
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnOrbSizeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnOrbSizeSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.nOrbSize = fNewValue
 	wndControl:GetParent():FindChild("Output"):SetText(fNewValue)
 	self:SetSettings()
 end
 
-function LatencyMonitorEx:OnThreshold1SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnThreshold1SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	if fNewValue >= self.settings.tThresholds[2][1] then
 		wndControl:SetValue(fOldValue)
 		return
@@ -601,7 +601,7 @@ function LatencyMonitorEx:OnThreshold1SliderChanged(wndHandler, wndControl, fNew
 	self:OnUpdateLatency()
 end
 
-function LatencyMonitorEx:OnThreshold2SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnThreshold2SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	if fNewValue >= self.settings.tThresholds[3][1] or fNewValue <= self.settings.tThresholds[1][1] then
 		wndControl:SetValue(fOldValue)
 		return
@@ -611,7 +611,7 @@ function LatencyMonitorEx:OnThreshold2SliderChanged(wndHandler, wndControl, fNew
 	self:OnUpdateLatency()
 end
 
-function LatencyMonitorEx:OnThreshold3SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnThreshold3SliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	if fNewValue <= self.settings.tThresholds[2][1] then
 		wndControl:SetValue(fOldValue)
 		return
@@ -621,7 +621,7 @@ function LatencyMonitorEx:OnThreshold3SliderChanged(wndHandler, wndControl, fNew
 	self:OnUpdateLatency()
 end
 
-function LatencyMonitorEx:OnOrbStyleSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
+function LatencyMonitor:OnOrbStyleSliderChanged(wndHandler, wndControl, fNewValue, fOldValue)
 	self.settings.nGraphicID = fNewValue
 	wndControl:GetParent():FindChild("Output"):SetText(arGraphicIDs[fNewValue])
 	self:SetGraphic()
@@ -633,7 +633,7 @@ end
 -- MainForm Functions
 ---------------------------------------------------------------------------------------------------
 
-function LatencyMonitorEx:OnMainWindowMove(wndHandler, wndControl, nOldLeft, nOldTop, nOldRight, nOldBottom)
+function LatencyMonitor:OnMainWindowMove(wndHandler, wndControl, nOldLeft, nOldTop, nOldRight, nOldBottom)
 	self.settings.tWindowOffsets[self.settings.nMainAnchorID] = VILib:Pack(self.wndMain:GetAnchorOffsets())
 	self.wndOptionsList:FindChild("PositionContainer:PosOffsetLeft:Slider"):SetValue(self.settings.tWindowOffsets[self.settings.nMainAnchorID][1])
 	self.wndOptionsList:FindChild("PositionContainer:PosOffsetLeft:Output"):SetText(self.settings.tWindowOffsets[self.settings.nMainAnchorID][1])
@@ -643,5 +643,5 @@ end
 
 
 
-local LatencyMonitorExInst = LatencyMonitorEx:new()
-LatencyMonitorExInst:Init()
+local LatencyMonitorInst = LatencyMonitor:new()
+LatencyMonitorInst:Init()
