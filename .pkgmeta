@@ -1,0 +1,7 @@
+externals:
+	GeminiColor:
+		url: https://github.com/wildstarnasa/GeminiColor.git
+package-as: LatencyMonitor
+license-output: LICENSE
+ignore:
+	- README.md

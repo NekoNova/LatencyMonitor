@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Addon Author="UnknownViper & Olivar Nax" APIVersion="11" Name="LatencyMonitor" Version="2.0.0" Description="Shows your latency graphically and/or with text and allows you to place it anywhere.">
+<Addon Author="UnknownViper & Olivar Nax" APIVersion="11" Name="LatencyMonitor" Version="2.0.0" Description="Shows your latency graphically and/or with text and allows you to place it anywhere." Version="2.0.2">
     <Script Name="GeminiColor/GeminiColor.lua"/>
     <Form Name="GeminiColor/GeminiColor.xml"/>
     <Script Name="VILib.lua"/>
